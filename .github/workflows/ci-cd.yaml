@@ -29,7 +29,7 @@ jobs:
       - name: Submit build to Google Cloud Build
         run: |
           gcloud builds submit \
-            --config=tf/applications/agorai-ci-cd-test/cloudbuild.yaml \
+            --config=cloudbuild.yaml \
             --project=${{ secrets.GCP_PROJECT_ID }} \
             --gcs-source-staging-dir="gs://${{ secrets.GCP_CLOUDBUILD_BUCKET }}/source" \
             --substitutions=_VERSION=${{ github.sha }}
