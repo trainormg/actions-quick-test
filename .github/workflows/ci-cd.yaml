@@ -1,0 +1,35 @@
+name: Build and Push Container to GCP Artifact Registry
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for requesting the JWT for WIF
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud via WIF
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: '${{ secrets.GCP_WIF_PROVIDER }}' # From terraform output 'workload_identity_provider'
+          service_account: '${{ secrets.GCP_WIF_SA_EMAIL }}'           # From terraform output 'github_actions_service_account'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Submit build to Google Cloud Build
+        run: |
+          gcloud builds submit \
+            --config=tf/applications/agorai-ci-cd-test/cloudbuild.yaml \
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+            --gcs-source-staging-dir="gs://${{ secrets.GCP_CLOUDBUILD_BUCKET }}/source" \
+            --substitutions=_VERSION=${{ github.sha }}

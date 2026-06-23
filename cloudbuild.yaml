@@ -1,0 +1,31 @@
+steps:
+  # 1. Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/whereami:${_VERSION}'
+      - '-t'
+      - '${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/whereami:latest'
+      - './app'
+
+  # 2. Push Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/whereami'
+
+substitutions:
+  _LOCATION: 'europe-west8'
+  _REPOSITORY: 'agorai-docker-repo'
+  _VERSION: 'manual-test-01'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+images:
+  - '${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/whereami:${_VERSION}'
+  - '${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/whereami:latest'
+
+serviceAccount: 'projects/${PROJECT_ID}/serviceAccounts/sa-cloudbuild-runner@${PROJECT_ID}.iam.gserviceaccount.com'
